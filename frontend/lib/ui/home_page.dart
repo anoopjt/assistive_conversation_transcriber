@@ -64,24 +64,34 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
             ),
-            floatingActionButton: Container(
-              //FAB
-              padding: EdgeInsets.all(10),
-              height: 80,
-              width: 80,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Theme.of(context).primaryColor.withOpacity(.26),
-              ),
-              child: Container(
-                padding: EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Theme.of(context).primaryColor,
+            floatingActionButton: FloatingActionButton(
+                backgroundColor: Theme.of(context).primaryColor,
+                child: Icon(
+                  Icons.add,
+                  color: Colors.white,
+                  size: 45,
                 ),
-                child: SvgPicture.asset("assets/icons/plus.svg"),
-              ),
-            ),
+                onPressed: () {
+                  switch (DefaultTabController.of(context).index) {
+                    case 1:
+                      {
+                        print('1');
+                      }
+                      break;
+
+                    case 2:
+                      {
+                        //statements;
+                      }
+                      break;
+
+                    default:
+                      {
+                        //statements;
+                      }
+                      break;
+                  }
+                }),
             body: TabBarView(
               children: <Widget>[
                 BorderTemplate(
