@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/ui/group_conversation.dart';
 
 class GroupChat extends StatelessWidget {
   @override
@@ -6,7 +7,20 @@ class GroupChat extends StatelessWidget {
     return Container(
       width: double.infinity,
       child: Center(
-        child: Text("Group chats"),
+        child: FlatButton(
+          child: Text(
+            "New Group",
+          ),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => GroupConversation(),
+              ),
+            );
+          },
+          color: Theme.of(context).primaryColor,
+        ),
       ),
     );
   }
