@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "834716818376",
+    "firebase_url": "https://auth-451ab.firebaseio.com",
+    "project_id": "auth-451ab",
+    "storage_bucket": "auth-451ab.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:834716818376:android:9c04750508deb2b95efefd",
+        "android_client_info": {
+          "package_name": "com.example.firebase_connection_Demo"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "834716818376-ecg8nr4nkk5dn2cvs16kh1nd0civukto.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDZ86hyscy32dh5BHxLbc1IFJPSrwqJu5M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "834716818376-ecg8nr4nkk5dn2cvs16kh1nd0civukto.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
