@@ -181,16 +181,16 @@ class _LoginPageState extends State<LoginPage> {
       color: Colors.white,
       splashColor: Colors.grey,
       onPressed: () {
-        // signInWithGoogle().whenComplete(() {
-        //   Navigator.of(context).push(
-        //     MaterialPageRoute(
-        //       builder: (context) {
-        //         return HomePage();
-        //       },
-        //     ),
-        //   );
-        // });
-        showInSnackBar("Google button pressed");
+        signInWithGoogle().whenComplete(() {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) {
+                return HomePage();
+              },
+            ),
+          );
+        });
+        //showInSnackBar("Google button pressed");
       },
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(40)),
       highlightElevation: 0,

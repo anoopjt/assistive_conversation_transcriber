@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:mic_stream/mic_stream.dart';
+//import 'package:mic_stream/mic_stream.dart';
 
 class ConversationTemplate extends StatefulWidget {
   ConversationTemplate({Key key, this.title}) : super(key: key);
@@ -20,8 +20,8 @@ class _MyConversationTemplateState extends State<ConversationTemplate> {
     if (_isRecording) {
       listener.cancel();
     } else {
-      listener =
-          microphone(sampleRate: 16000).listen((samples) => print(samples));
+      // listener =
+      //     microphone(sampleRate: 16000).listen((samples) => print(samples));
     }
 
     setState(() {

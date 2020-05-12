@@ -44,6 +44,7 @@ Future<String> signInWithGoogle() async {
   final FirebaseUser currentUser = await _auth.currentUser();
   assert(user.uid == currentUser.uid);
 
+  print("signInWithGoogle succeeded: $user");
   return 'signInWithGoogle succeeded: $user';
 }
 
@@ -79,7 +80,7 @@ Future<String> loginWithFB() async {
   }
 }
 
-void logout() async{
+void signOutFacebook() async{
   await facebookLogin.logOut();
   print("User Sign Out");
 }

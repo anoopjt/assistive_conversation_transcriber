@@ -93,7 +93,8 @@ class _HomePageState extends State<HomePage> {
                       title: Text("Sign out"),
                       leading: Icon(Icons.exit_to_app),
                       onTap: () => {
-                            logout(),
+                            signOutFacebook(),
+                            signOutGoogle(),
                             Navigator.of(context).pop(),
                           }),
                 ],
