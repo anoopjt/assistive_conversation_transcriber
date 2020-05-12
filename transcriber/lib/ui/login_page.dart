@@ -4,8 +4,6 @@ import 'package:transcriber/style/theme.dart' as Theme;
 import 'package:transcriber/networking/sign_in.dart';
 import 'package:transcriber/ui/home_page.dart';
 import 'package:flutter_facebook_login/flutter_facebook_login.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert' as JSON;
 
 class LoginPage extends StatefulWidget {
   LoginPage({Key key}) : super(key: key);
@@ -19,7 +17,6 @@ class _LoginPageState extends State<LoginPage> {
   bool _isLoggedIn = false;
   Map userProfile;
   final facebookLogin = FacebookLogin();
-
 
   @override
   Widget build(BuildContext context) {
@@ -58,28 +55,58 @@ class _LoginPageState extends State<LoginPage> {
                       image: new AssetImage('assets/img/login_logo1.png')),
                 ),
                 Padding(
-                  padding: EdgeInsets.only(top: 20.0),
-                  child: Text("Getting Started.."),
+                  padding: EdgeInsets.only(top: 260.0),
                 ),
-                Center(
-                  child: OutlineButton(
-                    child: Text("Login with Facebook"),
-                    onPressed: () {
-                      loginWithFB().then((value) {
-                        if(value=="cancelledByUser"  || value=="error"){
-                          showInSnackBar(value);
-                        }
-                        else Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) {
-                              return HomeScreen();
-                            },
-                          ),
-                        );
-                      });
-                    },
+                _signInButtonFB(), //FB button
+                Padding(
+                  padding: EdgeInsets.only(top: 20.0, bottom: 20.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: new LinearGradient(
+                              colors: [
+                                Colors.white10,
+                                Colors.white,
+                              ],
+                              begin: const FractionalOffset(0.0, 0.0),
+                              end: const FractionalOffset(1.0, 1.0),
+                              stops: [0.0, 1.0],
+                              tileMode: TileMode.clamp),
+                        ),
+                        width: 100.0,
+                        height: 1.0,
+                      ),
+                      Padding(
+                        padding: EdgeInsets.only(left: 15.0, right: 15.0),
+                        child: Text(
+                          "Or",
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18.0,
+                              fontFamily: "WorkSansMedium"),
+                        ),
+                      ),
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: new LinearGradient(
+                              colors: [
+                                Colors.white,
+                                Colors.white10,
+                              ],
+                              begin: const FractionalOffset(0.0, 0.0),
+                              end: const FractionalOffset(1.0, 1.0),
+                              stops: [0.0, 1.0],
+                              tileMode: TileMode.clamp),
+                        ),
+                        width: 100.0,
+                        height: 1.0,
+                      ),
+                    ],
                   ),
                 ),
+                _signInButtonG(),
               ],
             ),
           ),
@@ -105,43 +132,89 @@ class _LoginPageState extends State<LoginPage> {
     ));
   }
 
-  // Widget _signInButton() {
-  //   return OutlineButton(
-  //     splashColor: Colors.grey,
-  //     onPressed: () {
-  //       signInWithGoogle().whenComplete(() {
-  //         Navigator.of(context).push(
-  //           MaterialPageRoute(
-  //             builder: (context) {
-  //               return HomeScreen();
-  //             },
-  //           ),
-  //         );
-  //       });
-  //     },
-  //     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(40)),
-  //     highlightElevation: 0,
-  //     borderSide: BorderSide(color: Colors.grey),
-  //     child: Padding(
-  //       padding: const EdgeInsets.fromLTRB(0, 10, 0, 10),
-  //       child: Row(
-  //         mainAxisSize: MainAxisSize.min,
-  //         mainAxisAlignment: MainAxisAlignment.center,
-  //         children: <Widget>[
-  //           //Image(image: AssetImage("assets/google_logo.png"), height: 35.0),
-  //           Padding(
-  //             padding: const EdgeInsets.only(left: 10),
-  //             child: Text(
-  //               'Sign in with facebook',
-  //               style: TextStyle(
-  //                 fontSize: 20,
-  //                 color: Colors.grey,
-  //               ),
-  //             ),
-  //           )
-  //         ],
-  //       ),
-  //     ),
-  //   );
-  // }
+  Widget _signInButtonFB() {
+    return RaisedButton(
+      color: Colors.white,
+      splashColor: Colors.grey,
+      onPressed: () {
+        loginWithFB().then((value) {
+          if (value == "cancelledByUser" || value == "error") {
+            showInSnackBar(value);
+          } else
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) {
+                  return HomePage();
+                },
+              ),
+            );
+        });
+      },
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(40)),
+      highlightElevation: 0,
+      //borderSide: BorderSide(color: Colors.grey),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(0, 10, 0, 10),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Image(image: AssetImage("assets/facebook_logo.png"), height: 35.0),
+            Padding(
+              padding: const EdgeInsets.only(left: 10),
+              child: Text(
+                'Sign in with Facebook',
+                style: TextStyle(
+                  fontSize: 20,
+                  color: Colors.grey,
+                ),
+              ),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _signInButtonG() {
+    return RaisedButton(
+      color: Colors.white,
+      splashColor: Colors.grey,
+      onPressed: () {
+        // signInWithGoogle().whenComplete(() {
+        //   Navigator.of(context).push(
+        //     MaterialPageRoute(
+        //       builder: (context) {
+        //         return HomePage();
+        //       },
+        //     ),
+        //   );
+        // });
+        showInSnackBar("Google button pressed");
+      },
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(40)),
+      highlightElevation: 0,
+      //borderSide: BorderSide(color: Colors.grey),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(0, 10, 0, 10),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Image(image: AssetImage("assets/google_logo.png"), height: 35.0),
+            Padding(
+              padding: const EdgeInsets.only(left: 10),
+              child: Text(
+                'Sign in with Google',
+                style: TextStyle(
+                  fontSize: 20,
+                  color: Colors.grey,
+                ),
+              ),
+            )
+          ],
+        ),
+      ),
+    );
+  }
 }

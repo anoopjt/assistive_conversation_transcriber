@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:transcriber/ui/group_conversation.dart';
+import 'package:transcriber/ui/conversation_template.dart';
 
-class GroupChat extends StatelessWidget {
+class Conversations extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -9,13 +9,13 @@ class GroupChat extends StatelessWidget {
       child: Center(
         child: FlatButton(
           child: Text(
-            "New Group",
+            "New Conversation",
           ),
           onPressed: () {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => GroupConversation(),
+                builder: (_) => ConversationTemplate(),
               ),
             );
           },

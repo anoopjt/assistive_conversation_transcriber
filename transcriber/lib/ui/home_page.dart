@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:transcriber/widgets/conversations.dart';
 //import 'package:transcriber/widgets/category_selector.dart';
 //import 'package:transcriber/widgets/favorite_contacts.dart';
 import 'package:transcriber/widgets/recent_chats.dart';
 import 'package:transcriber/widgets/notes.dart';
-import 'package:transcriber/widgets/group_chats.dart';
+import 'package:transcriber/widgets/conversations.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:transcriber/ui/border_template.dart';
+import 'package:transcriber/networking/sign_in.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomePage extends StatefulWidget {
   @override
-  _HomeScreenState createState() => _HomeScreenState();
+  _HomePageState createState() => _HomePageState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -26,12 +28,6 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Scaffold(
             backgroundColor: Theme.of(context).primaryColor,
             appBar: AppBar(
-              leading: IconButton(
-                icon: Icon(Icons.menu),
-                iconSize: 30.0,
-                color: Colors.white,
-                onPressed: () {},
-              ),
               title: Image.asset(
                 'assets/img/title.png',
                 fit: BoxFit.cover,
@@ -56,11 +52,50 @@ class _HomeScreenState extends State<HomeScreen> {
                     text: "Messages",
                   ),
                   Tab(
-                    text: "Groups",
+                    text: "Conversations",
                   ),
                   Tab(
                     text: "Notes",
                   ),
+                ],
+              ),
+            ),
+            drawer: Drawer(
+              child: ListView(
+                children: <Widget>[
+                  UserAccountsDrawerHeader(
+                    accountName: Text("Preetham Goud"),
+                    accountEmail: Text("Preethamsureshgoud@gmail.com"),
+                    currentAccountPicture: CircleAvatar(
+                      backgroundColor:
+                          Theme.of(context).platform == TargetPlatform.iOS
+                              ? Colors.blue
+                              : Colors.white,
+                      child: Text(
+                        "P",
+                        style: TextStyle(fontSize: 40.0),
+                      ),
+                    ),
+                  ),
+                  ListTile(
+                      title: Text("Profile"),
+                      leading: Icon(Icons.verified_user),
+                      onTap: () => {}),
+                  ListTile(
+                      title: Text("Settings"),
+                      leading: Icon(Icons.settings),
+                      onTap: () => {}),
+                  ListTile(
+                      title: Text("About"),
+                      leading: Icon(Icons.info),
+                      onTap: () => {}),
+                  ListTile(
+                      title: Text("Sign out"),
+                      leading: Icon(Icons.exit_to_app),
+                      onTap: () => {
+                            logout(),
+                            Navigator.of(context).pop(),
+                          }),
                 ],
               ),
             ),
@@ -98,7 +133,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   item: RecentChats(),
                 ),
                 BorderTemplate(
-                  item: GroupChat(),
+                  item: Conversations(),
                 ),
                 BorderTemplate(
                   item: Notes(),
