@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'dart:async';
 import 'package:intro_slider/intro_slider.dart';
 import 'package:intro_slider/slide_object.dart';
 import 'package:transcriber/ui/login_page.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class IntroScreen extends StatefulWidget {
   IntroScreen({Key key}) : super(key: key);
@@ -15,27 +13,9 @@ class IntroScreen extends StatefulWidget {
 class IntroScreenState extends State<IntroScreen> {
   List<Slide> slides = new List();
 
-  Future checkFirstSeen() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    bool _seen = (prefs.getBool('seen') ?? false);
-
-    if (_seen) {
-      Navigator.of(context).pushReplacement(
-          new MaterialPageRoute(builder: (context) => new LoginPage()));
-    } else {
-      await prefs.setBool('seen', true);
-      Navigator.of(context).pushReplacement(
-          new MaterialPageRoute(builder: (context) => new IntroScreen()));
-    }
-  }
-
   @override
   void initState() {
     super.initState();
-    checkFirstSeen();
-    // new Timer(new Duration(milliseconds: 200), () {
-    //   checkFirstSeen();
-    // });
 
     slides.add(
       new Slide(
@@ -67,10 +47,8 @@ class IntroScreenState extends State<IntroScreen> {
   }
 
   void onDonePress() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => LoginPage()),
-    );
+    Navigator.of(context).pushReplacement(
+        new MaterialPageRoute(builder: (context) => new LoginPage()));
   }
 
   @override
