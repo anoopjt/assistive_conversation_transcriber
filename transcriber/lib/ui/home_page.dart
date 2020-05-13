@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:transcriber/ui/login_page.dart';
 import 'package:transcriber/widgets/conversations.dart';
 //import 'package:transcriber/widgets/category_selector.dart';
 //import 'package:transcriber/widgets/favorite_contacts.dart';
@@ -64,17 +65,14 @@ class _HomePageState extends State<HomePage> {
               child: ListView(
                 children: <Widget>[
                   UserAccountsDrawerHeader(
-                    accountName: Text("Preetham Goud"),
-                    accountEmail: Text("Preethamsureshgoud@gmail.com"),
+                    accountName: Text(name ?? "Name not present"),
+                    accountEmail: Text(email ?? "Email not present" ),
                     currentAccountPicture: CircleAvatar(
-                      backgroundColor:
-                          Theme.of(context).platform == TargetPlatform.iOS
-                              ? Colors.blue
-                              : Colors.white,
-                      child: Text(
-                        "P",
-                        style: TextStyle(fontSize: 40.0),
+                      backgroundImage: NetworkImage(
+                        imageUrl ?? "",
                       ),
+                      radius: 60,
+                      backgroundColor: Colors.transparent,
                     ),
                   ),
                   ListTile(
@@ -95,7 +93,10 @@ class _HomePageState extends State<HomePage> {
                       onTap: () => {
                             signOutFacebook(),
                             signOutGoogle(),
-                            Navigator.of(context).pop(),
+                            Navigator.of(context).pushAndRemoveUntil(
+                                MaterialPageRoute(builder: (context) {
+                              return LoginPage();
+                            }), ModalRoute.withName('/')),
                           }),
                 ],
               ),

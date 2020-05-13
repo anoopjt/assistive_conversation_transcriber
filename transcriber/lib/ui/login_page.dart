@@ -141,13 +141,10 @@ class _LoginPageState extends State<LoginPage> {
           if (value == "cancelledByUser" || value == "error") {
             showInSnackBar(value);
           } else
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) {
-                  return HomePage();
-                },
-              ),
-            );
+            Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (context) {
+              return HomePage();
+            }), ModalRoute.withName('/'));
         });
       },
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(40)),
@@ -182,13 +179,10 @@ class _LoginPageState extends State<LoginPage> {
       splashColor: Colors.grey,
       onPressed: () {
         signInWithGoogle().whenComplete(() {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) {
-                return HomePage();
-              },
-            ),
-          );
+          Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (context) {
+            return HomePage();
+          }), ModalRoute.withName('/'));
         });
         //showInSnackBar("Google button pressed");
       },
