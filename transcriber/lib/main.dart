@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:transcriber/routes.dart';
 import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
+import 'package:transcriber/ui/home_page.dart';
 import 'package:transcriber/ui/intro_page.dart';
 import 'package:transcriber/ui/login_page.dart';
 
@@ -58,10 +58,24 @@ class SplashState extends State<Splash> {
         }
     }
 
+    Future checkLogin() async {
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        bool _loggedIn = (prefs.getBool('logged') ?? false);
+
+        if (_loggedIn) {
+        Navigator.of(context).pushReplacement(
+            new MaterialPageRoute(builder: (context) => new HomePage()));
+        } else {
+        Navigator.of(context).pushReplacement(
+            new MaterialPageRoute(builder: (context) => new LoginPage()));
+        }
+    }
+
     @override
     void initState() {
         super.initState();
         new Timer(new Duration(milliseconds: 200), () {
+        checkLogin();
         checkFirstSeen();
         });
     }

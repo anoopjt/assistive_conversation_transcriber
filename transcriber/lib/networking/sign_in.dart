@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_facebook_login/flutter_facebook_login.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert' as JSON;
 
@@ -34,9 +35,9 @@ Future<String> signInWithGoogle() async {
   imageUrl = user.photoUrl;
 
   // Only taking the first part of the name, i.e., First Name
-  if (name.contains(" ")) {
-    name = name.substring(0, name.indexOf(" "));
-  }
+  // if (name.contains(" ")) {
+  //   name = name.substring(0, name.indexOf(" "));
+  // }
 
   assert(!user.isAnonymous);
   assert(await user.getIdToken() != null);
@@ -44,16 +45,22 @@ Future<String> signInWithGoogle() async {
   final FirebaseUser currentUser = await _auth.currentUser();
   assert(user.uid == currentUser.uid);
 
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  prefs.setBool('logged', true);
+  prefs.setString('name', name);
+  prefs.setString('email', email);
+  prefs.setString('imageUrl', imageUrl);
+  
   print("signInWithGoogle succeeded: $user");
   return 'signInWithGoogle succeeded: $user';
 }
 
 void signOutGoogle() async {
   await googleSignIn.signOut();
-
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  prefs.setBool('logged', false);
   print("User Sign Out");
 }
-
 
 Map userProfile;
 final facebookLogin = FacebookLogin();
@@ -68,6 +75,16 @@ Future<String> loginWithFB() async {
           'https://graph.facebook.com/v2.12/me?fields=name,picture.width(800).height(800),email&access_token=${token}');
       final profile = JSON.jsonDecode(graphResponse.body);
       print('signInWithFacebook succeeded: $profile');
+      name = profile['name'];
+      email = profile['email'];
+      imageUrl = profile['picture']['data']['url'];
+
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      prefs.setBool('logged', true);
+      prefs.setString('name', name);
+      prefs.setString('email', email);
+      prefs.setString('imageUrl', imageUrl);
+      
       return 'signInWithFacebook succeeded: $profile';
       break;
 
@@ -80,7 +97,9 @@ Future<String> loginWithFB() async {
   }
 }
 
-void signOutFacebook() async{
+void signOutFacebook() async {
   await facebookLogin.logOut();
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  prefs.setBool('logged', false);
   print("User Sign Out");
 }
