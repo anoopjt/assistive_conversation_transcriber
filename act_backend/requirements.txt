@@ -1,5 +1,6 @@
 Flask
 Flask-Session
 mongoengine
+gunicorn
 eventlet
 flask-socketio
