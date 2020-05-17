@@ -62,7 +62,7 @@ final User steven = User(
 );
 
 // FAVORITE CONTACTS
-List<User> favorites = [sam, steven, olivia, john, greg];
+List<User> favorites = [sam, steven, olivia, john, greg, sophia];
 
 // EXAMPLE CHATS ON HOME SCREEN
 List<Message> chats = [
