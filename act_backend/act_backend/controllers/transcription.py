@@ -1,7 +1,9 @@
 from flask import Flask, session, request
 from flask_socketio import SocketIO, emit, join_room, leave_room, close_room
 from ..transcriber import Transcriber
-import threading, random, string
+import threading
+import random
+import string
 
 """
   Details of SocketIO exchanges:
@@ -23,56 +25,104 @@ import threading, random, string
 
 transcriptionSessions = {}
 
+
 def init_app(app: Flask, session: session, socketio: SocketIO):
 
   @socketio.on("transcription_init")
   def tr_init():
-    tsid = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(30))
+    tsid = ''.join(random.choice(string.ascii_uppercase + string.digits)
+                   for _ in range(30))
     sid = request.sid
-    
-    transcripts = []
-    t = Transcriber(sid, tsid)
+
     transcriptionSessions[tsid] = {
-      "tsid": tsid,
-      "sid": sid,
-      "transcriber": Transcriber(sid, tsid),
+        "tsid": tsid,
+        sid: {
+            "is_owner": 1,
+            "transcriber": Transcriber(sid, tsid),
+        }
     }
     join_room(tsid)
     emit("transcription_id", tsid)
-  
+
+  @socketio.on("transcription_join")
+  def tr_join(tsid):
+    sid = request.sid
+
+    if tsid not in transcriptionSessions:
+      emit("invalid-tsid")
+      return
+
+    transcriptionSessions[tsid][sid] = {
+        "is_owner": 0,
+        "transcriber": Transcriber(sid, tsid)
+    }
+    join_room(tsid)
+
   @socketio.on("transcription_start")
   def tr_start(tsid):
+    sid = request.sid
     if tsid not in transcriptionSessions:
+      emit("invalid-tsid")
       return
-    
-    tr: Transcriber = transcriptionSessions[tsid].get("transcriber")
+
+    if sid not in transcriptionSessions[tsid]:
+      emit("invalid-sid-doesnt-belong-to-tsid")
+      return
+
+    tr: Transcriber = transcriptionSessions[tsid][sid].get("transcriber")
     t = threading.Thread(target=tr.start)
     t.start()
-  
+
   @socketio.on("transcribe_data")
   def tr_data(tsid, data):
+    sid = request.sid
     if tsid not in transcriptionSessions:
+      emit("invalid-tsid")
       return
-    
-    tr: Transcriber = transcriptionSessions[tsid].get("transcriber")
+
+    if sid not in transcriptionSessions[tsid]:
+      emit("invalid-sid-doesnt-belong-to-tsid")
+      return
+
+    tr: Transcriber = transcriptionSessions[tsid][sid].get("transcriber")
     emit("transcripts", tr.transcripts)
     tr.fill_data(data)
-  
+
   @socketio.on("transcription_stop")
   def tr_stop(tsid):
+    sid = request.sid
     if tsid not in transcriptionSessions:
+      emit("invalid-tsid")
       return
-    
-    tr: Transcriber = transcriptionSessions[tsid].get("transcriber")
+
+    if sid not in transcriptionSessions[tsid]:
+      emit("invalid-sid-doesnt-belong-to-tsid")
+      return
+
+    tr: Transcriber = transcriptionSessions[tsid][sid].get("transcriber")
     print(transcriptionSessions[tsid].get("transcripts"))
     tr.stop()
-  
+
   @socketio.on("transcription_destroy")
   def tr_destroy(tsid):
+    sid = request.sid
     if tsid not in transcriptionSessions:
+      emit("invalid-tsid")
       return
-    
-    tr: Transcriber = transcriptionSessions[tsid].get("transcriber")
-    tr.stop()
+
+    if sid not in transcriptionSessions[tsid]:
+      emit("invalid-sid-doesnt-belong-to-tsid")
+      return
+
+    if transcriptionSessions[tsid][sid].get("is_owner") != 1:
+      emit("invalid-owner-sid-can-only-destroy")
+      return
+
+    for k in transcriptionSessions[tsid].keys():
+      tr: Transciber = transcriptionSessions[tsid][k].get("transcriber", None)
+      if not tr:
+        continue
+      tr.stop()
+
     transcriptionSessions[tsid] = None
     close_room(tr.tsid)
