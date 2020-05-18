@@ -85,7 +85,7 @@ def init_app(app: Flask, session: session, socketio: SocketIO):
       return
 
     tr: Transcriber = transcriptionSessions[tsid][sid].get("transcriber")
-    emit("transcripts", tr.transcripts)
+    emit("transcripts", tr.transcripts, room=tsid)
     tr.fill_data(data)
 
   @socketio.on("transcription_stop")
@@ -119,6 +119,8 @@ def init_app(app: Flask, session: session, socketio: SocketIO):
       return
 
     for k in transcriptionSessions[tsid].keys():
+      if not isinstance(transcriptionSessions[tsid][k], dict):
+        continue
       tr: Transciber = transcriptionSessions[tsid][k].get("transcriber", None)
       if not tr:
         continue
