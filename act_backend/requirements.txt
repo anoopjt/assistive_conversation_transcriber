@@ -4,3 +4,4 @@ mongoengine
 gunicorn
 eventlet
 flask-socketio
+google-cloud-speech==1.3.2
