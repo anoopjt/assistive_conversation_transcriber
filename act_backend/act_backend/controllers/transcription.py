@@ -1,5 +1,5 @@
 from flask import Flask, session, request
-from flask_socketio import SocketIO, emit
+from flask_socketio import SocketIO, emit, join_room, leave_room, close_room
 from ..transcriber import Transcriber
 import threading, random, string
 
@@ -25,15 +25,6 @@ transcriptionSessions = {}
 
 def init_app(app: Flask, session: session, socketio: SocketIO):
 
-  def on_transcription(tsid, is_final, txt):
-    print("ON TR", len(transcriptionSessions.keys()))
-    if tsid not in transcriptionSessions:
-      return
-    
-    transcripts = transcriptionSessions[tsid]["transcripts"]
-    
-
-
   @socketio.on("transcription_init")
   def tr_init():
     tsid = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(30))
@@ -46,6 +37,7 @@ def init_app(app: Flask, session: session, socketio: SocketIO):
       "sid": sid,
       "transcriber": Transcriber(sid, tsid),
     }
+    join_room(tsid)
     emit("transcription_id", tsid)
   
   @socketio.on("transcription_start")
@@ -83,3 +75,4 @@ def init_app(app: Flask, session: session, socketio: SocketIO):
     tr: Transcriber = transcriptionSessions[tsid].get("transcriber")
     tr.stop()
     transcriptionSessions[tsid] = None
+    close_room(tr.tsid)
