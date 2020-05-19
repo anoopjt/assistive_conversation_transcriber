@@ -6,6 +6,7 @@ import 'package:transcriber/networking/sign_in.dart';
 import 'package:transcriber/ui/home_page.dart';
 import 'package:transcriber/ui/intro_page.dart';
 import 'package:transcriber/ui/login_page.dart';
+import 'package:flutter/scheduler.dart';
 
 void main() {
   // Dart client
@@ -49,8 +50,7 @@ class SplashState extends State<Splash> {
     bool _seen = (prefs.getBool('seen') ?? false);
 
     if (_seen) {
-      Navigator.of(context).pushReplacement(
-          new MaterialPageRoute(builder: (context) => new LoginPage()));
+      checkLogin();
     } else {
       await prefs.setBool('seen', true);
       Navigator.of(context).pushReplacement(
@@ -64,10 +64,8 @@ class SplashState extends State<Splash> {
 
     if (_loggedIn) {
       checkLoginFB().then((value) => {
-            print("hiiiii"),
             if (value == "error")
               {
-                print("nooooo"),
                 Navigator.of(context).pushReplacement(
                   new MaterialPageRoute(
                     builder: (context) => new LoginPage(),
@@ -76,7 +74,6 @@ class SplashState extends State<Splash> {
               }
             else if (value == "loggedIn")
               {
-                print("hiiiii"),
                 Navigator.of(context).pushReplacement(
                   new MaterialPageRoute(
                     builder: (context) => new HomePage(),
@@ -85,7 +82,6 @@ class SplashState extends State<Splash> {
               }
           });
     } else {
-      print("sdnfks");
       Navigator.of(context).pushReplacement(
         new MaterialPageRoute(
           builder: (context) => new LoginPage(),
@@ -97,8 +93,11 @@ class SplashState extends State<Splash> {
   @override
   void initState() {
     super.initState();
-    new Timer(new Duration(seconds: 10), () {
-      checkLogin();
+
+    // new Timer(new Duration(seconds: 200), () {
+      
+    // });
+    SchedulerBinding.instance.addPostFrameCallback((_) {
       checkFirstSeen();
     });
   }
