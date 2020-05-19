@@ -29,7 +29,7 @@ transcriptionSessions = {}
 def init_app(app: Flask, session: session, socketio: SocketIO):
 
   @socketio.on("transcription_init")
-  def tr_init():
+  def tr_init(full_name="John"):
     tsid = ''.join(random.choice(string.ascii_uppercase + string.digits)
                    for _ in range(30))
     sid = request.sid
@@ -37,15 +37,43 @@ def init_app(app: Flask, session: session, socketio: SocketIO):
     transcriptionSessions[tsid] = {
         "tsid": tsid,
         sid: {
+            "full_name": full_name,
             "is_owner": 1,
             "transcriber": Transcriber(sid, tsid),
-        }
+        },
+        "participants": set([sid])
     }
     join_room(tsid)
     emit("transcription_id", tsid)
 
+  def inform_participants(tsid):
+    if tsid not in transcriptionSessions:
+      return
+
+    sess = transcriptionSessions[sid]
+    emit("transcription_participants", [
+         {"sid": s[_sid]["sid"], "full_name": s[_sid]["full_name"]} for _sid in s["participants"]])
+
+  @socketio.on("transcription_leave")
+  def tr_leave(tsid):
+    sid = request.sid
+
+    if tsid not in transcriptionSessions:
+      emit("invalid-tsid")
+      return
+
+    if sid not in transcriptionSessions[tsid]["participants"]:
+      emit("not-a-member")
+      return
+
+    if transcriptionSessions[tsid][sid]:
+      transcriptionSessions[tsid][sid]["transcriber"].stop()
+      del transcriptionSessions[tsid][sid]
+    transcriptionSessions[tsid]["participants"].remove(sid)
+    inform_participants(tsid)
+
   @socketio.on("transcription_join")
-  def tr_join(tsid):
+  def tr_join(tsid, full_name="Doe"):
     sid = request.sid
 
     if tsid not in transcriptionSessions:
@@ -53,10 +81,13 @@ def init_app(app: Flask, session: session, socketio: SocketIO):
       return
 
     transcriptionSessions[tsid][sid] = {
+        "full_name": full_name,
         "is_owner": 0,
         "transcriber": Transcriber(sid, tsid)
     }
+    transcriptionSessions[tsid]["participants"].add(sid)
     join_room(tsid)
+    inform_participants(tsid)
 
   @socketio.on("transcription_start")
   def tr_start(tsid):
@@ -85,6 +116,7 @@ def init_app(app: Flask, session: session, socketio: SocketIO):
       return
 
     tr: Transcriber = transcriptionSessions[tsid][sid].get("transcriber")
+    # [{is_final: bool, txt: string, tid: string}]
     emit("transcripts", tr.transcripts, room=tsid)
     tr.fill_data(data)
 
