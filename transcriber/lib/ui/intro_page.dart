@@ -19,29 +19,29 @@ class IntroScreenState extends State<IntroScreen> {
 
     slides.add(
       new Slide(
-        title: "ERASER",
+        title: "WELCOME",
         description:
-            "Allow miles wound place the leave had. To sitting subject no improve studied limited",
-        pathImage: "images/photo_eraser.png",
-        backgroundColor: Color(0xfff5a623),
+            "Bla bla bla bla bla",
+        pathImage: "assets/img/croods3.png",
+        backgroundColor: Color(0xffECE2B2),
       ),
     );
     slides.add(
       new Slide(
-        title: "PENCIL",
+        title: "Seamless Transcription",
         description:
-            "Ye indulgence unreserved connection alteration appearance",
-        pathImage: "images/photo_pencil.png",
-        backgroundColor: Color(0xff203152),
+            "Bla bla bla bla bla",
+        pathImage: "assets/img/croods.png",
+        backgroundColor: Color(0xffF1A74C),
       ),
     );
     slides.add(
       new Slide(
-        title: "RULER",
+        title: "Connect with multiple devices",
         description:
             "Much evil soon high in hope do view. Out may few northward believing attempted. Yet timed being songs marry one defer men our. Although finished blessing do of",
-        pathImage: "images/photo_ruler.png",
-        backgroundColor: Color(0xff9932CC),
+        pathImage: "assets/img/croods2.png",
+        backgroundColor: Color(0xffAE7C6A),
       ),
     );
   }
