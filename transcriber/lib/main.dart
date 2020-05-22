@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:transcriber/networking/sign_in.dart';
 import 'package:transcriber/ui/home_page.dart';
 import 'package:transcriber/ui/intro_page.dart';
@@ -9,17 +8,6 @@ import 'package:transcriber/ui/login_page.dart';
 import 'package:flutter/scheduler.dart';
 
 void main() {
-  // Dart client
-  IO.Socket socket = IO.io('http://10.0.2.2:3000', <String, dynamic>{
-    'transports': ['websocket']
-  });
-  socket.on('connect', (_) {
-    print('connect');
-    socket.emit('msg', 'test');
-  });
-  socket.on('event', (data) => print(data));
-  socket.on('disconnect', (_) => print('disconnect'));
-  socket.on('fromServer', (_) => print(_));
   runApp(MyApp());
 }
 

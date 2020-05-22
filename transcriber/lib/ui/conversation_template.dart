@@ -1,7 +1,16 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:mic_stream/mic_stream.dart';
+import 'package:socket_io_client/socket_io_client.dart' as IO;
+import 'package:qr_flutter/qr_flutter.dart';
+import 'package:barcode_scan/barcode_scan.dart';
+import 'package:transcriber/networking/sign_in.dart';
+import 'package:slide_popup_dialog/slide_popup_dialog.dart' as slideDialog;
+import 'package:transcriber/ui/home_page.dart';
+
+final AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT;
 
 class ConversationTemplate extends StatefulWidget {
   ConversationTemplate({Key key, this.title}) : super(key: key);
@@ -13,20 +22,195 @@ class ConversationTemplate extends StatefulWidget {
 }
 
 class _MyConversationTemplateState extends State<ConversationTemplate> {
-  bool _isRecording = false;
+  bool isRecording = false;
+  Stream<List<int>> stream;
   StreamSubscription<List<int>> listener;
+  IO.Socket socket;
+  String transcriptionId;
+  List<dynamic> transcripts = [];
 
-  void _record() {
-    if (_isRecording) {
-      listener.cancel();
-    } else {
-      listener =
-          microphone(sampleRate: 16000).listen((samples) => print(samples));
+  void _showDialog() {
+    slideDialog.showSlideDialog(
+      context: context,
+      child: Expanded(
+        child: Column(
+          children: <Widget>[
+            Text("Scan QR to join Conversation"),
+            QrImage(
+              data: jsonEncode({"type": "join", "tsid": transcriptionId}),
+              version: QrVersions.auto,
+              size: 200,
+            ),
+            Text('Transcription ID $transcriptionId'),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  void initState() {
+    socket = IO.io('https://act.fahimalizain.com', <String, dynamic>{
+      'transports': ['websocket']
+    });
+
+    // hard coding my local IP for now
+    socket.on('connect', (_) {
+      print('SocketIO: Connected!');
+      socket.send(["SocketIO: Connected!"]);
+      if (this.mounted) {
+        setState(() {});
+      }
+    });
+    socket.on("reconnect_attempt", (data) => print("Reconnect Attempt $data"));
+    socket.on("reconnect_failed", (data) => print("Reconnect fail $data"));
+    socket.on("reconnect_error", (data) => print("Reconnect err $data"));
+
+    socket.on('event', (data) => print(data));
+    socket.on('transcripts', (d) {
+      if (this.mounted) {
+        setState(() {
+          transcripts = d;
+        });
+      }
+    });
+    socket.on('disconnect', (_) {
+      print("Disconnected");
+      if (this.mounted) {
+        setState(() {});
+      }
+      if (isRecording) {
+        _stopListening();
+      }
+    });
+    socket.on('fromServer', (_) => print(_));
+    socket.on("transcription_id", (tid) {
+      if (this.mounted) {
+        setState(() {
+          transcriptionId = tid;
+        });
+      }
+      print("Received Transcription ID $tid");
+    });
+
+    super.initState();
+    initTranscription();
+  }
+
+  void initTranscription() {
+    socket.emit("transcription_init", name);
+  }
+
+  void startTranscription() {
+    if (transcriptionId == null) {
+      print("Transcription ID is null");
+      return;
+    }
+    socket.emit("transcription_start", transcriptionId);
+  }
+
+  void stopTranscription() {
+    if (transcriptionId == null) {
+      print("Transcription ID is null");
+      return;
+    }
+    socket.emit("transcription_stop", transcriptionId);
+  }
+
+  void abortTranscription() {
+    if (transcriptionId == null) {
+      print("Transcription ID is null");
+      return;
+    }
+    socket.emit("transcription_destroy", transcriptionId);
+    if (this.mounted) {
+      setState(() {
+        transcriptionId = null;
+      });
+    }
+  }
+
+  void joinTranscription(tsid) {
+    socket.emit("transcription_join", tsid);
+    if (this.mounted) {
+      setState(() {
+        transcriptionId = tsid;
+      });
+    }
+  }
+
+  void scanTranscription() async {
+    var result = await BarcodeScanner.scan();
+    if (result.type == ResultType.Cancelled) {
+      initTranscription();
+      return;
+    }
+    print(result);
+    var r = jsonDecode(result.rawContent);
+    if (r["type"] == "join") {
+      joinTranscription(r["tsid"]);
+    }
+    print(r);
+  }
+
+  int max = 0;
+  int min = 0;
+
+  void sendToServer(List<int> sample) {
+    if (transcriptionId == null) {
+      return;
+    }
+    bool hasChange = false;
+    for (int i in sample) {
+      if (i > max) {
+        max = i;
+        hasChange = true;
+      } else if (i < min) {
+        min = i;
+        hasChange = true;
+      }
+    }
+    if (hasChange) {
+      print("Updated MM [$min $max]");
+    }
+    // var d = Int16List.fromList(sample);
+    socket.emit("transcribe_data", [transcriptionId, sample]);
+  }
+
+  bool _changeListening() =>
+      !isRecording ? _startListening() : _stopListening();
+
+  bool _startListening() {
+    if (isRecording) return false;
+    stream = microphone(
+        audioSource: AudioSource.DEFAULT,
+        sampleRate: 16000,
+        channelConfig: ChannelConfig.CHANNEL_IN_MONO,
+        audioFormat: AUDIO_FORMAT);
+
+    if (this.mounted) {
+      setState(() {
+        isRecording = true;
+      });
     }
 
-    setState(() {
-      _isRecording = !_isRecording;
-    });
+    print("Start Listening to the microphone");
+    listener = stream.listen((samples) => sendToServer(samples));
+
+    return true;
+  }
+
+  bool _stopListening() {
+    if (!isRecording) return false;
+    print("Stop Listening to the microphone");
+    listener.cancel();
+
+    if (this.mounted) {
+      setState(() {
+        isRecording = false;
+      });
+    }
+    return true;
   }
 
   @override
@@ -34,33 +218,44 @@ class _MyConversationTemplateState extends State<ConversationTemplate> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Conversation'),
+        leading: new IconButton(
+          icon: new Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
         actions: <Widget>[
           FlatButton.icon(
             onPressed: () {
-              /*...*/
+              abortTranscription();
+              scanTranscription();
             },
-            icon: Icon(Icons.save_alt),
-            label: Text("Save"),
+            icon: Icon(Icons.merge_type),
+            label: Text("Join session"),
             textColor: Colors.white,
-          )
+          ),
         ],
       ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              'Push button and speak something',
-            ),
-          ],
+          children: <Widget>[]
+            ..addAll((transcripts.map((e) => Text(e["txt"])).toList())),
         ),
       ),
       floatingActionButton: FloatingActionButton(
-          onPressed: _record,
+          onPressed: () {
+            _changeListening();
+            if (isRecording) {
+              startTranscription();
+            } else {
+              stopTranscription();
+            }
+          },
           elevation: 2.0,
           tooltip: 'Record',
-          child: Icon(_isRecording ? Icons.mic : Icons.mic_off),
-          backgroundColor: _isRecording ? Colors.red : Colors.green),
+          child: Icon(isRecording ? Icons.mic : Icons.mic_off),
+          backgroundColor: isRecording ? Colors.red : Colors.green),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: BottomAppBar(
         shape: CircularNotchedRectangle(),
@@ -70,20 +265,16 @@ class _MyConversationTemplateState extends State<ConversationTemplate> {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: <Widget>[
             FlatButton.icon(
-              icon: Icon(Icons.person_add), //`Icon` to display
-              label: Text('Add Person'), //`Text` to display
+              icon: Icon(Icons.group_add),
+              label: Text('Add a person'),
               onPressed: () {
-                //Code to execute when Floating Action Button is clicked
-                //...
+                _showDialog();
               },
             ),
             FlatButton.icon(
-              icon: Icon(Icons.language), //`Icon` to display
-              label: Text('Language'), //`Text` to display
-              onPressed: () {
-                //Code to execute when Floating Action Button is clicked
-                //...
-              },
+              icon: Icon(Icons.language),
+              label: Text('Language'),
+              onPressed: () {},
             ),
           ],
         ),
