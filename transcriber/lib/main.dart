@@ -81,10 +81,6 @@ class SplashState extends State<Splash> {
   @override
   void initState() {
     super.initState();
-
-    // new Timer(new Duration(seconds: 200), () {
-      
-    // });
     SchedulerBinding.instance.addPostFrameCallback((_) {
       checkFirstSeen();
     });

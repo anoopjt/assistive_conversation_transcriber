@@ -2,10 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:transcriber/ui/conversation_template.dart';
 import 'package:transcriber/ui/login_page.dart';
 import 'package:transcriber/widgets/conversations.dart';
-import 'package:transcriber/widgets/groups.dart';
-//import 'package:transcriber/widgets/category_selector.dart';
 import 'package:transcriber/widgets/favorite_contacts.dart';
-import 'package:transcriber/ui/border_template.dart';
 import 'package:transcriber/networking/sign_in.dart';
 
 class HomePage extends StatefulWidget {
@@ -49,10 +46,6 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             ListTile(
-                title: Text("Join Session"),
-                leading: Icon(Icons.add_to_home_screen),
-                onTap: () => {}),
-            ListTile(
                 title: Text("Add favourites"),
                 leading: Icon(Icons.group_add),
                 onTap: () => {}),
@@ -69,6 +62,7 @@ class _HomePageState extends State<HomePage> {
                 title: Text("About"),
                 leading: Icon(Icons.info),
                 onTap: () => {}),
+            SizedBox(height: 300),
             Divider(),
             ListTile(
                 title: Text("Sign out"),
@@ -86,10 +80,11 @@ class _HomePageState extends State<HomePage> {
       ),
       floatingActionButton: FloatingActionButton(
           backgroundColor: Theme.of(context).primaryColor,
+          elevation: 5,
           child: Icon(
             Icons.add,
             color: Colors.white,
-            size: 45,
+            size: 40,
           ),
           onPressed: () {
             Navigator.push(
