@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:transcriber/models/message_model.dart';
-import 'package:transcriber/ui/chat_page.dart';
 
 class FavoriteContacts extends StatelessWidget {
   @override
@@ -42,14 +41,14 @@ class FavoriteContacts extends StatelessWidget {
               itemCount: favorites.length,
               itemBuilder: (BuildContext context, int index) {
                 return GestureDetector(
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ChatScreen(
-                        user: favorites[index],
-                      ),
-                    ),
-                  ),
+                  // onTap: () => Navigator.push(
+                  //   context,
+                  //   MaterialPageRoute(
+                  //     builder: (_) => ChatScreen(
+                  //       user: favorites[index],
+                  //     ),
+                  //   ),
+                  // ),
                   child: Padding(
                     padding: EdgeInsets.all(10.0),
                     child: Column(

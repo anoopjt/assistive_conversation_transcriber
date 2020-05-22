@@ -8,7 +8,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'package:barcode_scan/barcode_scan.dart';
 import 'package:transcriber/networking/sign_in.dart';
 import 'package:slide_popup_dialog/slide_popup_dialog.dart' as slideDialog;
-import 'package:transcriber/ui/home_page.dart';
+import 'package:transcriber/widgets/messages.dart';
 
 final AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT;
 
@@ -33,16 +33,18 @@ class _MyConversationTemplateState extends State<ConversationTemplate> {
     slideDialog.showSlideDialog(
       context: context,
       child: Expanded(
-        child: Column(
-          children: <Widget>[
-            Text("Scan QR to join Conversation"),
-            QrImage(
-              data: jsonEncode({"type": "join", "tsid": transcriptionId}),
-              version: QrVersions.auto,
-              size: 200,
-            ),
-            Text('Transcription ID $transcriptionId'),
-          ],
+        child: SingleChildScrollView(
+          child: Column(
+            children: <Widget>[
+              Text("Scan QR to join Conversation"),
+              QrImage(
+                data: jsonEncode({"type": "join", "tsid": transcriptionId}),
+                version: QrVersions.auto,
+                size: 200,
+              ),
+              Text('Transcription ID $transcriptionId'),
+            ],
+          ),
         ),
       ),
     );
@@ -218,6 +220,7 @@ class _MyConversationTemplateState extends State<ConversationTemplate> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Conversation'),
+        elevation: 0.0,
         leading: new IconButton(
           icon: new Icon(Icons.arrow_back),
           onPressed: () {
@@ -236,11 +239,40 @@ class _MyConversationTemplateState extends State<ConversationTemplate> {
           ),
         ],
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[]
-            ..addAll((transcripts.map((e) => Text(e["txt"])).toList())),
+      body: Container(
+        color: Theme.of(context).primaryColor,
+        child: Container(
+          width: double.infinity,
+          height: double.infinity,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(40.0),
+              topRight: Radius.circular(40.0),
+            ),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(40.0),
+              topRight: Radius.circular(40.0),
+            ),
+            child: Scrollbar(
+              child: SingleChildScrollView(
+                scrollDirection: Axis.vertical,
+                padding: EdgeInsets.only(bottom: 30),
+                reverse: true,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: <Widget>[]..addAll((transcripts
+                      .map(
+                        (e) => Messages(txt: e["txt"]),
+                      )
+                      )),
+                ),
+              ),
+            ),
+          ),
         ),
       ),
       floatingActionButton: FloatingActionButton(
@@ -252,14 +284,14 @@ class _MyConversationTemplateState extends State<ConversationTemplate> {
               stopTranscription();
             }
           },
-          elevation: 2.0,
+          elevation: 5.0,
           tooltip: 'Record',
           child: Icon(isRecording ? Icons.mic : Icons.mic_off),
           backgroundColor: isRecording ? Colors.red : Colors.green),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: BottomAppBar(
         shape: CircularNotchedRectangle(),
-        notchMargin: 4.0,
+        notchMargin: 7.0,
         child: new Row(
           mainAxisSize: MainAxisSize.max,
           mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -271,6 +303,7 @@ class _MyConversationTemplateState extends State<ConversationTemplate> {
                 _showDialog();
               },
             ),
+            SizedBox(width: 15),
             FlatButton.icon(
               icon: Icon(Icons.language),
               label: Text('Language'),
