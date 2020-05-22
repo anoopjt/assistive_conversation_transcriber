@@ -63,6 +63,15 @@ String imageUrl;
 //   print("User Sign Out");
 // }
 
+void simpleSignIn(final Username) async {
+      name = Username;
+      print(name);
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      prefs.setBool('logged', true);
+      prefs.setString('method', 'simpleSignIn');
+      prefs.setString('name', name);
+  }
+
 Map userProfile;
 final facebookLogin = FacebookLogin();
 

@@ -133,7 +133,7 @@ class _MyConversationTemplateState extends State<ConversationTemplate> {
   }
 
   void joinTranscription(tsid) {
-    socket.emit("transcription_join", tsid);
+    socket.emit("transcription_join", [tsid, name]);
     if (this.mounted) {
       setState(() {
         transcriptionId = tsid;
