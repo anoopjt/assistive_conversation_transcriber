@@ -17,6 +17,15 @@ class _LoginPageState extends State<LoginPage> {
   bool _isLoggedIn = false;
   Map userProfile;
   final facebookLogin = FacebookLogin();
+  final myController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+
+  @override
+  void dispose() {
+    // Clean up the controller when the widget is disposed.
+    myController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +64,7 @@ class _LoginPageState extends State<LoginPage> {
                       image: new AssetImage('assets/img/login_logo1.png')),
                 ),
                 Padding(
-                  padding: EdgeInsets.only(top: 260.0),
+                  padding: EdgeInsets.only(top: 200.0),
                 ),
                 _signInButtonFB(), //FB button
                 Padding(
@@ -107,6 +116,42 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
                 _signInButtonG(),
+                Padding(padding: EdgeInsets.only(top: 20)),
+                Form(
+                    key: _formKey,
+                    child: Column(
+                      children: <Widget>[
+                        TextFormField(
+                            obscureText: false,
+                            controller: myController,
+                            style: TextStyle(fontSize: 20),
+                            decoration: InputDecoration(
+                              contentPadding:
+                                  EdgeInsets.fromLTRB(20.0, 15.0, 20.0, 15.0),
+                              hintText: "UserName",
+                              border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(32.0)),
+                            ),
+                            validator: (text) {
+                              if (text == null || text.isEmpty) {
+                                return 'Text is empty';
+                              }
+                              return null;
+                            }),
+                        IconButton(
+                          icon: Icon(Icons.arrow_forward),
+                          onPressed: () {
+                            if (_formKey.currentState.validate()) {
+                              simpleSignIn(myController.text);
+                              Navigator.of(context).pushAndRemoveUntil(
+                                  MaterialPageRoute(builder: (context) {
+                                return HomePage();
+                              }), ModalRoute.withName('/'));
+                            }
+                          },
+                        ),
+                      ],
+                    ))
               ],
             ),
           ),
