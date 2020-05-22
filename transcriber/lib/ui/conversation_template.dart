@@ -262,13 +262,16 @@ class _MyConversationTemplateState extends State<ConversationTemplate> {
                 padding: EdgeInsets.only(bottom: 30),
                 reverse: true,
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: <Widget>[]..addAll((transcripts
-                      .map(
-                        (e) => Messages(txt: e["txt"]),
-                      )
-                      )),
+                  //mainAxisAlignment: MainAxisAlignment.center,
+                  //crossAxisAlignment: CrossAxisAlignment.center,
+                  children: <Widget>[]..addAll((transcripts.map(
+                      (e) => Messages(
+                        txt: e["txt"],
+                        full_name: e["full_name"],
+                        timestamp: e["timestamp"],
+                        username: name,
+                      ),
+                    ))),
                 ),
               ),
             ),
