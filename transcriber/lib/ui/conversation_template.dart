@@ -58,7 +58,9 @@ class _MyConversationTemplateState extends State<ConversationTemplate> {
     socket.on('connect', (_) {
       print('SocketIO: Connected!');
       socket.send(["SocketIO: Connected!"]);
-      setState(() {});
+      if (this.mounted) {
+        setState(() {});
+      }
     });
     socket.on("reconnect_attempt", (data) => print("Reconnect Attempt $data"));
     socket.on("reconnect_failed", (data) => print("Reconnect fail $data"));
@@ -66,26 +68,33 @@ class _MyConversationTemplateState extends State<ConversationTemplate> {
 
     socket.on('event', (data) => print(data));
     socket.on('transcripts', (d) {
-      setState(() {
-        transcripts = d;
-      });
+      if (this.mounted) {
+        setState(() {
+          transcripts = d;
+        });
+      }
     });
     socket.on('disconnect', (_) {
       print("Disconnected");
-      setState(() {});
+      if (this.mounted) {
+        setState(() {});
+      }
       if (isRecording) {
         _stopListening();
       }
     });
     socket.on('fromServer', (_) => print(_));
     socket.on("transcription_id", (tid) {
-      setState(() {
-        transcriptionId = tid;
-      });
+      if (this.mounted) {
+        setState(() {
+          transcriptionId = tid;
+        });
+      }
       print("Received Transcription ID $tid");
     });
 
     super.initState();
+    initTranscription();
   }
 
   void initTranscription() {
@@ -114,21 +123,26 @@ class _MyConversationTemplateState extends State<ConversationTemplate> {
       return;
     }
     socket.emit("transcription_destroy", transcriptionId);
-    setState(() {
-      transcriptionId = null;
-    });
+    if (this.mounted) {
+      setState(() {
+        transcriptionId = null;
+      });
+    }
   }
 
   void joinTranscription(tsid) {
     socket.emit("transcription_join", tsid);
-    setState(() {
-      transcriptionId = tsid;
-    });
+    if (this.mounted) {
+      setState(() {
+        transcriptionId = tsid;
+      });
+    }
   }
 
   void scanTranscription() async {
     var result = await BarcodeScanner.scan();
     if (result.type == ResultType.Cancelled) {
+      initTranscription();
       return;
     }
     print(result);
@@ -174,9 +188,11 @@ class _MyConversationTemplateState extends State<ConversationTemplate> {
         channelConfig: ChannelConfig.CHANNEL_IN_MONO,
         audioFormat: AUDIO_FORMAT);
 
-    setState(() {
-      isRecording = true;
-    });
+    if (this.mounted) {
+      setState(() {
+        isRecording = true;
+      });
+    }
 
     print("Start Listening to the microphone");
     listener = stream.listen((samples) => sendToServer(samples));
@@ -189,9 +205,11 @@ class _MyConversationTemplateState extends State<ConversationTemplate> {
     print("Stop Listening to the microphone");
     listener.cancel();
 
-    setState(() {
-      isRecording = false;
-    });
+    if (this.mounted) {
+      setState(() {
+        isRecording = false;
+      });
+    }
     return true;
   }
 
@@ -209,12 +227,13 @@ class _MyConversationTemplateState extends State<ConversationTemplate> {
         actions: <Widget>[
           FlatButton.icon(
             onPressed: () {
-              /*...*/
+              abortTranscription();
+              scanTranscription();
             },
-            icon: Icon(Icons.save_alt),
-            label: Text("Save"),
+            icon: Icon(Icons.merge_type),
+            label: Text("Join session"),
             textColor: Colors.white,
-          )
+          ),
         ],
       ),
       body: Center(
@@ -245,28 +264,13 @@ class _MyConversationTemplateState extends State<ConversationTemplate> {
           mainAxisSize: MainAxisSize.max,
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: <Widget>[
-            IconButton(
+            FlatButton.icon(
               icon: Icon(Icons.group_add),
-              tooltip: 'Add Person',
+              label: Text('Add a person'),
               onPressed: () {
-                initTranscription();
                 _showDialog();
               },
             ),
-            if (transcriptionId == null)
-              // no id, either create or join
-              ...[
-              IconButton(
-                icon: Icon(Icons.merge_type),
-                tooltip: 'Join session',
-                onPressed: scanTranscription,
-              )
-            ] else ...[
-              IconButton(
-                icon: Icon(Icons.close),
-                onPressed: abortTranscription,
-              )
-            ],
             FlatButton.icon(
               icon: Icon(Icons.language),
               label: Text('Language'),
