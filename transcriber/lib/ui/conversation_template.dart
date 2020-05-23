@@ -28,6 +28,8 @@ class _MyConversationTemplateState extends State<ConversationTemplate> {
   IO.Socket socket;
   String transcriptionId;
   List<dynamic> transcripts = [];
+  String language = 'English';
+
 
   void _showDialog() {
     slideDialog.showSlideDialog(
@@ -108,7 +110,7 @@ class _MyConversationTemplateState extends State<ConversationTemplate> {
       print("Transcription ID is null");
       return;
     }
-    socket.emit("transcription_start", transcriptionId);
+    socket.emit("transcription_start", [transcriptionId, language]);
   }
 
   void stopTranscription() {
@@ -217,7 +219,6 @@ class _MyConversationTemplateState extends State<ConversationTemplate> {
 
   @override
   Widget build(BuildContext context) {
-    String dropdownValue = 'English';
 
     // To show Selected Item in Text.
     String holder = '';
@@ -232,7 +233,7 @@ class _MyConversationTemplateState extends State<ConversationTemplate> {
 
     void getDropDownItem() {
       setState(() {
-        holder = dropdownValue;
+        holder = language;
       });
     }
 
@@ -327,7 +328,7 @@ class _MyConversationTemplateState extends State<ConversationTemplate> {
             ),
             SizedBox(width: 15),
             DropdownButton<String>(
-              value: dropdownValue,
+              value: language,
               icon: Icon(Icons.arrow_drop_down),
               iconSize: 24,
               elevation: 16,
@@ -338,7 +339,7 @@ class _MyConversationTemplateState extends State<ConversationTemplate> {
               ),
               onChanged: (String data) {
                 setState(() {
-                  dropdownValue = data;
+                  language = data;
                 });
               },
               items: languages.map<DropdownMenuItem<String>>((String value) {
