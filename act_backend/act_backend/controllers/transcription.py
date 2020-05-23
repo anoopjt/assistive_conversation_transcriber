@@ -41,6 +41,7 @@ def init_app(app: Flask, session: session, socketio: SocketIO):
             "is_owner": 1,
             "transcriber": Transcriber(sid, tsid),
         },
+        "transcripts": [],
         "participants": set([sid])
     }
     join_room(tsid)
@@ -50,9 +51,9 @@ def init_app(app: Flask, session: session, socketio: SocketIO):
     if tsid not in transcriptionSessions:
       return
 
-    sess = transcriptionSessions[sid]
+    s = transcriptionSessions[tsid]
     emit("transcription_participants", [
-         {"sid": s[_sid]["sid"], "full_name": s[_sid]["full_name"]} for _sid in s["participants"]])
+         {"sid": _sid, "full_name": s[_sid]["full_name"]} for _sid in s["participants"]])
 
   @socketio.on("transcription_leave")
   def tr_leave(tsid):
@@ -90,7 +91,7 @@ def init_app(app: Flask, session: session, socketio: SocketIO):
     inform_participants(tsid)
 
   @socketio.on("transcription_start")
-  def tr_start(tsid):
+  def tr_start(tsid, language):
     sid = request.sid
     if tsid not in transcriptionSessions:
       emit("invalid-tsid")
@@ -99,8 +100,19 @@ def init_app(app: Flask, session: session, socketio: SocketIO):
     if sid not in transcriptionSessions[tsid]:
       emit("invalid-sid-doesnt-belong-to-tsid")
       return
+    
+    language_map = {
+      "English": "en-IN",
+      "Hindi": "hi-IN",
+      "Malayalam": "ml-IN",
+      "Telugu": "te-IN",
+      "Tamil": "ta-IN"
+    }
+    l_code = language_map.get(language) or "en-IN"
+    print("Active Language: ", l_code)
 
     tr: Transcriber = transcriptionSessions[tsid][sid].get("transcriber")
+    tr.set_language(l_code)
     t = threading.Thread(target=tr.start)
     t.start()
 
@@ -117,8 +129,35 @@ def init_app(app: Flask, session: session, socketio: SocketIO):
 
     tr: Transcriber = transcriptionSessions[tsid][sid].get("transcriber")
     # [{is_final: bool, txt: string, tid: string}]
-    emit("transcripts", tr.transcripts, room=tsid)
+    merge_transcripts(tsid=tsid, sid=sid)
+    emit("transcripts", transcriptionSessions[tsid]["transcripts"], room=tsid)
     tr.fill_data(data)
+
+  def merge_transcripts(tsid, sid):
+    local_transcripts = list(transcriptionSessions[tsid][sid]["transcriber"].transcripts)
+    i = len(local_transcripts)
+    if not i:
+      return
+    
+    session_transcripts = transcriptionSessions[tsid]["transcripts"]
+    while i > 0:
+      tr_l = local_transcripts[i-1]
+      tr_l["full_name"] = transcriptionSessions[tsid][sid]["full_name"]
+
+      j = len(session_transcripts)
+      while j > 0:
+        tr_s = session_transcripts[j-1]
+        if tr_s["timestamp"] >= tr_l["timestamp"]:
+          break
+        j -= 1
+
+      if j > 0 and session_transcripts[j-1]["tid"] == tr_l["tid"]:
+        break
+    
+      session_transcripts.insert(j, tr_l)
+      i -= 1
+    
+    transcriptionSessions[tsid]["transcripts"] = sorted(transcriptionSessions[tsid]["transcripts"], key=lambda x: x["timestamp"])
 
   @socketio.on("transcription_stop")
   def tr_stop(tsid):

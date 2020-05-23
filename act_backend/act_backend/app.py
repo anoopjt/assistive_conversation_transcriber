@@ -2,7 +2,7 @@ from flask import Flask, session
 from flask_session import Session
 from flask_socketio import SocketIO
 import os
-dev_port = (os.environ['DEV_PORT']) or 3000
+dev_port = (os.environ.get('DEV_PORT', None)) or 3000
 if isinstance(dev_port, str):
   dev_port = int(dev_port)
 

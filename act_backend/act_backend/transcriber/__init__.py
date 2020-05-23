@@ -2,7 +2,7 @@ from google.cloud import speech
 from google.cloud.speech import enums
 from google.cloud.speech import types
 
-import sys, re, threading, random, string
+import sys, re, threading, random, string, time
 from six.moves import queue
 
 
@@ -40,6 +40,16 @@ class Transcriber(object):
       # None stops the transcription
       self.buffer.put(None)
 
+  def set_language(self, lang):
+    self.language_code = lang
+    self.config = types.RecognitionConfig(
+        encoding=enums.RecognitionConfig.AudioEncoding.LINEAR16,
+        sample_rate_hertz=self.samplingRate,
+        language_code=self.language_code)
+    self.streaming_config = types.StreamingRecognitionConfig(
+        config=self.config,
+        interim_results=True)
+
   def start(self):
     print("Starting tr on thread: ", threading.currentThread().ident)
     import time
@@ -66,8 +76,10 @@ class Transcriber(object):
       self.transcripts.append({
         "is_final": is_final,
         "txt": txt,
+        "timestamp": int(time.time()),
         "tid": ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(50))
       })
+
 
   def process_gapi_response(self, responses):
     num_chars_printed = 0
