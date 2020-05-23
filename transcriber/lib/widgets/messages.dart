@@ -7,7 +7,7 @@ class Messages extends StatelessWidget {
   var date;
 
   Messages({this.txt, this.full_name, this.timestamp, this.username}) {
-    //date = new DateTime.fromMicrosecondsSinceEpoch(timestamp).toLocal();
+    date = new DateTime.fromMillisecondsSinceEpoch(timestamp * 1000).toLocal();
   }
 
   @override
