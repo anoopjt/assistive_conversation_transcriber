@@ -217,6 +217,25 @@ class _MyConversationTemplateState extends State<ConversationTemplate> {
 
   @override
   Widget build(BuildContext context) {
+    String dropdownValue = 'English';
+
+    // To show Selected Item in Text.
+    String holder = '';
+
+    List<String> languages = [
+      'English',
+      'Hindi',
+      'Malayalam',
+      'Tamil',
+      'Telugu'
+    ];
+
+    void getDropDownItem() {
+      setState(() {
+        holder = dropdownValue;
+      });
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Conversation'),
@@ -307,10 +326,27 @@ class _MyConversationTemplateState extends State<ConversationTemplate> {
               },
             ),
             SizedBox(width: 15),
-            FlatButton.icon(
-              icon: Icon(Icons.language),
-              label: Text('Language'),
-              onPressed: () {},
+            DropdownButton<String>(
+              value: dropdownValue,
+              icon: Icon(Icons.arrow_drop_down),
+              iconSize: 24,
+              elevation: 16,
+              style: TextStyle(color: Colors.black, fontSize: 18),
+              underline: Container(
+                height: 2,
+                color: Colors.deepPurpleAccent,
+              ),
+              onChanged: (String data) {
+                setState(() {
+                  dropdownValue = data;
+                });
+              },
+              items: languages.map<DropdownMenuItem<String>>((String value) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value),
+                );
+              }).toList(),
             ),
           ],
         ),
