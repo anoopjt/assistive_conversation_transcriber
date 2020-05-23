@@ -40,6 +40,7 @@ class Messages extends StatelessWidget {
                 "$txt",
                 style: Theme.of(context).textTheme.body2.apply(
                       color: Colors.white,
+                      fontSizeDelta: 2.0,
                     ),
               ),
             ),
@@ -75,6 +76,7 @@ class Messages extends StatelessWidget {
                   "$txt",
                   style: Theme.of(context).textTheme.body1.apply(
                         color: Colors.black87,
+                        fontSizeDelta: 2.0,
                       ),
                 ),
               ),
