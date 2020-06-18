@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_facebook_login/flutter_facebook_login.dart';
@@ -11,6 +13,9 @@ final GoogleSignIn googleSignIn = GoogleSignIn();
 String name;
 String email;
 String imageUrl;
+var token;
+var url = "https://act.fahimalizain.com";
+String jwt;
 
 Future<String> signInWithGoogle() async {
   final GoogleSignInAccount googleSignInAccount = await googleSignIn.signIn();
@@ -33,6 +38,7 @@ Future<String> signInWithGoogle() async {
   name = user.displayName;
   email = user.email;
   imageUrl = user.photoUrl;
+  token = await user.getIdToken();
 
   // Only taking the first part of the name, i.e., First Name
   // if (name.contains(" ")) {
@@ -45,14 +51,31 @@ Future<String> signInWithGoogle() async {
   final FirebaseUser currentUser = await _auth.currentUser();
   assert(user.uid == currentUser.uid);
 
+  var body = json.encode({
+    "email": email,
+    "name": name,
+    "fb_id": "",
+    "fb_access_token": "",
+    "google_id": user.uid,
+    "google_access_token": token.token,
+  });
+
+  http.Response response = await http.post(
+      Uri.encodeFull(url + "/api/google-login"),
+      body: body,
+      headers: {'Content-type': 'application/json'});
+
+  jwt = JSON.jsonDecode(response.body)["jwt_token"];
+
   SharedPreferences prefs = await SharedPreferences.getInstance();
   prefs.setBool('logged', true);
   prefs.setString('method', 'google');
   prefs.setString('name', name);
   prefs.setString('email', email);
   prefs.setString('imageUrl', imageUrl);
+  prefs.setString('jwt', jwt);
 
-  print("signInWithGoogle succeeded: $user");
+  print("signInWithGoogle succeeded: $jwt");
   return 'signInWithGoogle succeeded: $user';
 }
 
@@ -65,15 +88,6 @@ void signOutGoogle() async {
   prefs.setString('email', "");
   prefs.setString('imageUrl', "");
   print("User Sign Out");
-}
-
-void simpleSignIn(final Username) async {
-  name = Username;
-  print(name);
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  prefs.setBool('logged', true);
-  prefs.setString('method', 'simpleSignIn');
-  prefs.setString('name', name);
 }
 
 Map userProfile;
@@ -92,6 +106,22 @@ Future<String> loginWithFB() async {
       email = profile['email'];
       imageUrl = profile['picture']['data']['url'];
 
+      var body = json.encode({
+        "email": email,
+        "name": name,
+        "fb_id": profile['id'],
+        "fb_access_token": token,
+        "google_id": "",
+        "google_access_token": "",
+      });
+
+      http.Response response = await http.post(
+          Uri.encodeFull(url + "/api/fb-login"),
+          body: body,
+          headers: {'Content-type': 'application/json'});
+
+      jwt = JSON.jsonDecode(response.body)["jwt_token"];
+
       SharedPreferences prefs = await SharedPreferences.getInstance();
       prefs.setBool('logged', true);
       prefs.setString('method', 'facebook');
@@ -100,7 +130,7 @@ Future<String> loginWithFB() async {
       prefs.setString('imageUrl', imageUrl);
       prefs.setString('token', token);
 
-      print('signInWithFacebook succeeded: $profile');
+      print('signInWithFacebook succeeded: $jwt');
       return 'signInWithFacebook succeeded: $profile';
       break;
 

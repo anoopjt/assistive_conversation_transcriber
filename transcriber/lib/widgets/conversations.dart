@@ -1,4 +1,12 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert' as JSON;
+
+import 'package:transcriber/ui/conversation.dart';
 
 void main() => runApp(Conversations());
 
@@ -6,9 +14,43 @@ class Conversations extends StatefulWidget {
   createState() => ConversationsState();
 }
 
-final convos = List<String>.generate(20, (i) => "Conversation ${i + 1}");
+var convos = [];
+var formatter = new DateFormat.yMd().add_jm();
+
+String date(timestamp) {
+  var _date =
+      new DateTime.fromMillisecondsSinceEpoch(timestamp * 1000).toLocal();
+  return formatter.format(_date);
+}
 
 class ConversationsState extends State<Conversations> {
+  var url = "https://act.fahimalizain.com";
+
+  void getConvos() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    var _jwt = prefs.getString('jwt');
+    var body = json.encode({
+      "jwt": _jwt,
+    });
+
+    http.Response response = await http.post(
+        Uri.encodeFull(url + "/api/conversations"),
+        body: body,
+        headers: {'Content-type': 'application/json'});
+    var data = JSON.jsonDecode(response.body)["data"];
+    setState(() {
+      convos = data;
+    });
+    print(data);
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    getConvos();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Expanded(
@@ -27,8 +69,20 @@ class ConversationsState extends State<Conversations> {
               child: Card(
                 elevation: 3,
                 child: ListTile(
-                  title: Text(convos[index]),
-                  onTap: () {},
+                  title: Text(
+                    date(convos[index]["timestamp"]),
+                    style:
+                        TextStyle(fontSize: 18.0, fontWeight: FontWeight.w400),
+                  ),
+                  subtitle: Text(convos[index]["last_message"]),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => Conversation(id: convos[index]["id"]),
+                      ),
+                    ).then((val)=>{getConvos()});
+                  },
                 ),
               ),
               onDismissed: (direction) {
