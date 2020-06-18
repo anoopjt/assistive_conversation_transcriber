@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class Messages extends StatelessWidget {
   final txt;
@@ -7,7 +8,10 @@ class Messages extends StatelessWidget {
   var date;
 
   Messages({this.txt, this.full_name, this.timestamp, this.username}) {
+    var formatter = new DateFormat('jm');
+  
     date = new DateTime.fromMillisecondsSinceEpoch(timestamp * 1000).toLocal();
+    date = formatter.format(date);
   }
 
   @override

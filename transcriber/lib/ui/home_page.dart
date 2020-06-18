@@ -59,17 +59,31 @@ class _HomePageState extends State<HomePage> {
                 leading: Icon(Icons.settings),
                 onTap: () => {}),
             ListTile(
-                title: Text("About"),
-                leading: Icon(Icons.info),
-                onTap: () => {}),
-            SizedBox(height: 300),
+              title: Text("About"),
+              leading: Icon(Icons.info),
+              onTap: () => {
+                showAboutDialog(
+                  context: context,
+                  applicationIcon: FlutterLogo(),
+                  applicationName: 'Transcriber App',
+                  applicationVersion: '0.0.1',
+                  applicationLegalese: '©2020 Transcriber',
+                  children: <Widget>[
+                    Padding(
+                        padding: EdgeInsets.only(top: 15),
+                        child: Text(
+                            'Transcriber is an app set to help hearing imparired, providing real-time speech-to-text transcriptions.'))
+                  ],
+                )
+              },
+            ),
             Divider(),
             ListTile(
                 title: Text("Sign out"),
                 leading: Icon(Icons.exit_to_app),
                 onTap: () => {
                       signOutFacebook(),
-                      //signOutGoogle(),
+                      signOutGoogle(),
                       Navigator.of(context).pushAndRemoveUntil(
                           MaterialPageRoute(builder: (context) {
                         return LoginPage();

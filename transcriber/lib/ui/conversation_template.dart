@@ -333,10 +333,10 @@ class _MyConversationTemplateState extends State<ConversationTemplate> {
               iconSize: 24,
               elevation: 16,
               style: TextStyle(color: Colors.black, fontSize: 18),
-              underline: Container(
-                height: 2,
-                color: Colors.deepPurpleAccent,
-              ),
+              // underline: Container(
+              //   height: 2,
+              //   color: Colors.black
+              // ),
               onChanged: (String data) {
                 setState(() {
                   language = data;

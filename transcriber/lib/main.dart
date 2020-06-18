@@ -15,12 +15,12 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return new MaterialApp(
-      title: 'Transcribe',
+      title: 'Transcriber',
       debugShowCheckedModeBanner: false,
       theme: new ThemeData(
         primaryColor: Color(0xFFb20a2c),
         accentColor: Color(0xFFFEF9EB),
-        primarySwatch: Colors.orange,
+        primarySwatch: Colors.red,
       ),
       home: new Splash(),
     );
@@ -51,24 +51,45 @@ class SplashState extends State<Splash> {
     bool _loggedIn = (prefs.getBool('logged') ?? false);
 
     if (_loggedIn) {
-      checkLoginFB().then((value) => {
-            if (value == "error")
-              {
-                Navigator.of(context).pushReplacement(
-                  new MaterialPageRoute(
-                    builder: (context) => new LoginPage(),
+      if (prefs.getString('method') == "facebook") {
+        checkLoginFB().then((value) => {
+              if (value == "error")
+                {
+                  Navigator.of(context).pushReplacement(
+                    new MaterialPageRoute(
+                      builder: (context) => new LoginPage(),
+                    ),
                   ),
-                ),
-              }
-            else if (value == "loggedIn")
-              {
-                Navigator.of(context).pushReplacement(
-                  new MaterialPageRoute(
-                    builder: (context) => new HomePage(),
+                }
+              else if (value == "loggedIn")
+                {
+                  Navigator.of(context).pushReplacement(
+                    new MaterialPageRoute(
+                      builder: (context) => new HomePage(),
+                    ),
                   ),
-                ),
-              }
-          });
+                }
+            });
+      } else if (prefs.getString('method') == "google") {
+        checkLoginG().then((value) => {
+              if (value == "signedout")
+                {
+                  Navigator.of(context).pushReplacement(
+                    new MaterialPageRoute(
+                      builder: (context) => new LoginPage(),
+                    ),
+                  ),
+                }
+              else if (value == "loggedIn")
+                {
+                  Navigator.of(context).pushReplacement(
+                    new MaterialPageRoute(
+                      builder: (context) => new HomePage(),
+                    ),
+                  ),
+                }
+            });
+      }
     } else {
       Navigator.of(context).pushReplacement(
         new MaterialPageRoute(
@@ -88,9 +109,13 @@ class SplashState extends State<Splash> {
 
   @override
   Widget build(BuildContext context) {
-    return new Scaffold(
-      body: new Center(
-        child: new Text('Loading...'),
+    return MaterialApp(
+      home: Scaffold(
+        body: Center(
+          child: Container(
+            child: CircularProgressIndicator(),
+          ),
+        ),
       ),
     );
   }
