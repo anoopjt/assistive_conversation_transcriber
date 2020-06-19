@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:transcriber/widgets/messages.dart';
@@ -42,7 +43,6 @@ class _ConversationState extends State<Conversation> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     getName();
     getConvo();

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:mic_stream/mic_stream.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
@@ -14,7 +15,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 final AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT;
 
 class ConversationTemplate extends StatefulWidget {
-  ConversationTemplate({Key key, this.title}) : super(key: key);
+  final AsyncCallback onSaveCallBack;
+  ConversationTemplate({Key key, this.title, @required this.onSaveCallBack}) : super(key: key);
 
   final String title;
 
@@ -131,12 +133,15 @@ class _MyConversationTemplateState extends State<ConversationTemplate> {
     socket.emit("transcription_stop", transcriptionId);
   }
 
-  void saveTranscription() {
+  void saveTranscription() async {
     if (transcriptionId == null) {
       print("Transcription ID is null");
       return;
     }
     socket.emit("transcription_save", transcriptionId);
+    if (widget.onSaveCallBack != null) {
+      await widget.onSaveCallBack();
+    }
   }
 
   void abortTranscription() {
