@@ -4,6 +4,9 @@ from ..transcriber import Transcriber
 import threading
 import random
 import string
+from ..model.conversation import Conversation, ConversationMessage
+from ..model.user import User
+from ..controllers.auth import get_user
 
 """
   Details of SocketIO exchanges:
@@ -28,16 +31,81 @@ transcriptionSessions = {}
 
 def init_app(app: Flask, session: session, socketio: SocketIO):
 
+  @app.route("/api/conv-messages/<conv>", methods=["POST"])
+  def get_messages(conv):
+    data = request.json
+    try:
+      user: User = get_user(data["jwt"])
+    except Exception as e:
+      print("Err on JWT", jwt, e)
+      return {
+        "status": "fail"
+      }
+    
+    convs = Conversation.objects(id=conv, owner=user)
+    if not convs.count():
+      return {
+        "status": "fail"
+      }
+    
+    return {
+      "status": "success",
+      "data": [{
+        "txt": x.message,
+        "timestamp": x.timestamp,
+        "owner": x.owner.email,
+        "full_name": x.owner.name
+      } for x in convs[0].messages]
+    }
+
+  @app.route("/api/conversations", methods=["POST"])
+  def get_conversations():
+    data = request.json
+    try:
+      user: User = get_user(data["jwt"])
+    except Exception as e:
+      print("Err on JWT", jwt, e)
+      return {
+        "status": "fail"
+      }
+
+    convs = Conversation.objects(owner=user)
+    ret = []
+    for c in convs:
+      if not len(c.messages):
+        # lets take this opportunity to delete those empty guys :D
+        c.delete()
+        continue
+      ret.append({
+        "id": str(c.id),
+        "member_count": len(c.members),
+        "timestamp": c.messages[0].timestamp,
+        "msg_count": len(c.messages),
+        "last_message": c.messages[-1].message
+      })
+
+    return {
+      "status": "success",
+      "data": ret
+    }
+
   @socketio.on("transcription_init")
-  def tr_init(full_name="John"):
-    tsid = ''.join(random.choice(string.ascii_uppercase + string.digits)
-                   for _ in range(30))
+  def tr_init(jwt=None):
+    try:
+      user: User = get_user(jwt)
+    except Exception as e:
+      print("Err on JWT", jwt, e)
+      return
+    conv = make_conversation(user)
+    tsid = str(conv.id)
     sid = request.sid
+    print("TR INIT", tsid, "Socket: ", sid)
 
     transcriptionSessions[tsid] = {
+        "conv": conv,
         "tsid": tsid,
         sid: {
-            "full_name": full_name,
+            "user": user,
             "is_owner": 1,
             "transcriber": Transcriber(sid, tsid),
         },
@@ -74,7 +142,11 @@ def init_app(app: Flask, session: session, socketio: SocketIO):
     inform_participants(tsid)
 
   @socketio.on("transcription_join")
-  def tr_join(tsid, full_name="Doe"):
+  def tr_join(tsid, jwt):
+    try:
+      user: User = get_user(jwt)
+    except:
+      return
     sid = request.sid
 
     if tsid not in transcriptionSessions:
@@ -82,6 +154,7 @@ def init_app(app: Flask, session: session, socketio: SocketIO):
       return
 
     transcriptionSessions[tsid][sid] = {
+        "user": user,
         "full_name": full_name,
         "is_owner": 0,
         "transcriber": Transcriber(sid, tsid)
@@ -100,13 +173,13 @@ def init_app(app: Flask, session: session, socketio: SocketIO):
     if sid not in transcriptionSessions[tsid]:
       emit("invalid-sid-doesnt-belong-to-tsid")
       return
-    
+
     language_map = {
-      "English": "en-IN",
-      "Hindi": "hi-IN",
-      "Malayalam": "ml-IN",
-      "Telugu": "te-IN",
-      "Tamil": "ta-IN"
+        "English": "en-IN",
+        "Hindi": "hi-IN",
+        "Malayalam": "ml-IN",
+        "Telugu": "te-IN",
+        "Tamil": "ta-IN"
     }
     l_code = language_map.get(language) or "en-IN"
     print("Active Language: ", l_code)
@@ -134,15 +207,17 @@ def init_app(app: Flask, session: session, socketio: SocketIO):
     tr.fill_data(data)
 
   def merge_transcripts(tsid, sid):
-    local_transcripts = list(transcriptionSessions[tsid][sid]["transcriber"].transcripts)
+    local_transcripts = list(
+        transcriptionSessions[tsid][sid]["transcriber"].transcripts)
     i = len(local_transcripts)
     if not i:
       return
-    
+
     session_transcripts = transcriptionSessions[tsid]["transcripts"]
     while i > 0:
       tr_l = local_transcripts[i-1]
-      tr_l["full_name"] = transcriptionSessions[tsid][sid]["full_name"]
+      tr_l["full_name"] = transcriptionSessions[tsid][sid]["user"]["name"]
+      tr_l["sid"] = sid
 
       j = len(session_transcripts)
       while j > 0:
@@ -153,11 +228,12 @@ def init_app(app: Flask, session: session, socketio: SocketIO):
 
       if j > 0 and session_transcripts[j-1]["tid"] == tr_l["tid"]:
         break
-    
+
       session_transcripts.insert(j, tr_l)
       i -= 1
-    
-    transcriptionSessions[tsid]["transcripts"] = sorted(transcriptionSessions[tsid]["transcripts"], key=lambda x: x["timestamp"])
+
+    transcriptionSessions[tsid]["transcripts"] = sorted(
+        transcriptionSessions[tsid]["transcripts"], key=lambda x: x["timestamp"])
 
   @socketio.on("transcription_stop")
   def tr_stop(tsid):
@@ -173,6 +249,36 @@ def init_app(app: Flask, session: session, socketio: SocketIO):
     tr: Transcriber = transcriptionSessions[tsid][sid].get("transcriber")
     print(transcriptionSessions[tsid].get("transcripts"))
     tr.stop()
+
+
+  @socketio.on("transcription_save")
+  def tr_destroy(tsid):
+    sid = request.sid
+    if tsid not in transcriptionSessions:
+      emit("invalid-tsid")
+      return
+
+    if sid not in transcriptionSessions[tsid]:
+      emit("invalid-sid-doesnt-belong-to-tsid")
+      return
+
+    if transcriptionSessions[tsid][sid].get("is_owner") != 1:
+      emit("invalid-owner-sid-can-only-save")
+      return
+
+    conv: Conversation = transcriptionSessions[tsid]["conv"]
+    transcripts = transcriptionSessions[tsid]["transcripts"]
+
+    for tr in transcripts:
+      if "saved" not in tr:
+        tr["saved"] = 1
+        conv.messages.append(ConversationMessage(
+          timestamp=tr["timestamp"],
+          message=tr["txt"],
+          owner=transcriptionSessions[tsid][tr["sid"]]["user"]
+        ))
+    print("tr_save", conv.id)
+    conv.save()
 
   @socketio.on("transcription_destroy")
   def tr_destroy(tsid):
@@ -198,4 +304,10 @@ def init_app(app: Flask, session: session, socketio: SocketIO):
       tr.stop()
 
     transcriptionSessions[tsid] = None
-    close_room(tr.tsid)
+    close_room(tsid)
+
+
+def make_conversation(user: User):
+  c = Conversation(owner=user, members=[user], messages=[])
+  c.save()
+  return c
