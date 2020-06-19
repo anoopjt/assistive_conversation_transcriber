@@ -31,6 +31,28 @@ transcriptionSessions = {}
 
 def init_app(app: Flask, session: session, socketio: SocketIO):
 
+  @app.route("/api/conversation/<conv>", methods=["DELETE"])
+  def delete_msg(conv):
+    data = request.json
+    try:
+      user: User = get_user(data["jwt"])
+    except Exception as e:
+      print("Err on JWT", jwt, e)
+      return {
+        "status": "fail"
+      }
+
+    convs = Conversation.objects(id=conv, owner=user)
+    if not convs.count():
+      return {
+        "status": "fail"
+      }
+    
+    convs[0].delete()
+    return {
+      "status": "success"
+    }
+
   @app.route("/api/conv-messages/<conv>", methods=["POST"])
   def get_messages(conv):
     data = request.json
@@ -84,6 +106,7 @@ def init_app(app: Flask, session: session, socketio: SocketIO):
         "last_message": c.messages[-1].message
       })
 
+    ret.reverse()
     return {
       "status": "success",
       "data": ret
