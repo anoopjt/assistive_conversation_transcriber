@@ -155,6 +155,7 @@ class _MyConversationTemplateState extends State<ConversationTemplate> {
     if (this.mounted) {
       setState(() {
         transcriptionId = null;
+        transcripts = [];
       });
     }
   }
@@ -168,11 +169,13 @@ class _MyConversationTemplateState extends State<ConversationTemplate> {
     if (this.mounted) {
       setState(() {
         transcriptionId = tsid;
+        transcripts = [];
       });
     }
   }
 
   void scanTranscription() async {
+    abortTranscription();
     var result = await BarcodeScanner.scan();
     if (result.type == ResultType.Cancelled) {
       initTranscription();
