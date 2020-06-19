@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:transcriber/ui/conversation_template.dart';
 import 'package:transcriber/ui/login_page.dart';
 import 'package:transcriber/widgets/conversations.dart';
@@ -11,6 +12,20 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  void fetchPrefs() async {
+    // TODO: implement initState
+    super.initState();
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    name = prefs.getString('name');
+    email = prefs.getString('email');
+    imageUrl = prefs.getString('imageUrl');
+  }
+
+  @override
+  void initState() {
+    fetchPrefs();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -46,11 +61,6 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             ListTile(
-                title: Text("Add favourites"),
-                leading: Icon(Icons.group_add),
-                onTap: () => {}),
-            Divider(),
-            ListTile(
                 title: Text("Profile"),
                 leading: Icon(Icons.verified_user),
                 onTap: () => {}),
@@ -59,17 +69,31 @@ class _HomePageState extends State<HomePage> {
                 leading: Icon(Icons.settings),
                 onTap: () => {}),
             ListTile(
-                title: Text("About"),
-                leading: Icon(Icons.info),
-                onTap: () => {}),
-            SizedBox(height: 300),
+              title: Text("About"),
+              leading: Icon(Icons.info),
+              onTap: () => {
+                showAboutDialog(
+                  context: context,
+                  applicationIcon: FlutterLogo(),
+                  applicationName: 'Transcriber App',
+                  applicationVersion: '1.0.0',
+                  applicationLegalese: '©2020 Transcriber',
+                  children: <Widget>[
+                    Padding(
+                        padding: EdgeInsets.only(top: 15),
+                        child: Text(
+                            'Transcriber is an app set to help hearing imparired, providing real-time speech-to-text transcriptions.'))
+                  ],
+                )
+              },
+            ),
             Divider(),
             ListTile(
                 title: Text("Sign out"),
                 leading: Icon(Icons.exit_to_app),
                 onTap: () => {
                       signOutFacebook(),
-                      //signOutGoogle(),
+                      signOutGoogle(),
                       Navigator.of(context).pushAndRemoveUntil(
                           MaterialPageRoute(builder: (context) {
                         return LoginPage();
@@ -96,7 +120,10 @@ class _HomePageState extends State<HomePage> {
           }),
       body: Column(
         children: <Widget>[
-          FavoriteContacts(),
+          // FavoriteContacts(),
+          SizedBox(
+            height: 20.0,
+          ),
           Expanded(
             child: Container(
               decoration: BoxDecoration(

@@ -9,6 +9,7 @@ import 'package:barcode_scan/barcode_scan.dart';
 import 'package:transcriber/networking/sign_in.dart';
 import 'package:slide_popup_dialog/slide_popup_dialog.dart' as slideDialog;
 import 'package:transcriber/widgets/messages.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 final AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT;
 
@@ -27,9 +28,9 @@ class _MyConversationTemplateState extends State<ConversationTemplate> {
   StreamSubscription<List<int>> listener;
   IO.Socket socket;
   String transcriptionId;
+  bool isOwner = false;
   List<dynamic> transcripts = [];
   String language = 'English';
-
 
   void _showDialog() {
     slideDialog.showSlideDialog(
@@ -50,6 +51,11 @@ class _MyConversationTemplateState extends State<ConversationTemplate> {
         ),
       ),
     );
+  }
+
+  Future<String> getJwt() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString('jwt');
   }
 
   @override
@@ -101,8 +107,12 @@ class _MyConversationTemplateState extends State<ConversationTemplate> {
     initTranscription();
   }
 
-  void initTranscription() {
-    socket.emit("transcription_init", name);
+  void initTranscription() async {
+    var _jwt = await getJwt();
+    setState(() {
+      isOwner = true;
+    });
+    socket.emit("transcription_init", _jwt);
   }
 
   void startTranscription() {
@@ -121,12 +131,22 @@ class _MyConversationTemplateState extends State<ConversationTemplate> {
     socket.emit("transcription_stop", transcriptionId);
   }
 
+  void saveTranscription() {
+    if (transcriptionId == null) {
+      print("Transcription ID is null");
+      return;
+    }
+    socket.emit("transcription_save", transcriptionId);
+  }
+
   void abortTranscription() {
     if (transcriptionId == null) {
       print("Transcription ID is null");
       return;
     }
-    socket.emit("transcription_destroy", transcriptionId);
+    if (isOwner) {
+      socket.emit("transcription_destroy", transcriptionId);
+    }
     if (this.mounted) {
       setState(() {
         transcriptionId = null;
@@ -134,8 +154,12 @@ class _MyConversationTemplateState extends State<ConversationTemplate> {
     }
   }
 
-  void joinTranscription(tsid) {
-    socket.emit("transcription_join", [tsid, name]);
+  void joinTranscription(tsid) async {
+    var _jwt = await getJwt();
+    setState(() {
+      isOwner = false;
+    });
+    socket.emit("transcription_join", [tsid, _jwt]);
     if (this.mounted) {
       setState(() {
         transcriptionId = tsid;
@@ -219,7 +243,6 @@ class _MyConversationTemplateState extends State<ConversationTemplate> {
 
   @override
   Widget build(BuildContext context) {
-
     // To show Selected Item in Text.
     String holder = '';
 
@@ -244,17 +267,25 @@ class _MyConversationTemplateState extends State<ConversationTemplate> {
         leading: new IconButton(
           icon: new Icon(Icons.arrow_back),
           onPressed: () {
+            abortTranscription();
             Navigator.pop(context);
           },
         ),
         actions: <Widget>[
           FlatButton.icon(
             onPressed: () {
-              abortTranscription();
               scanTranscription();
             },
             icon: Icon(Icons.merge_type),
             label: Text("Join session"),
+            textColor: Colors.white,
+          ),
+          FlatButton.icon(
+            onPressed: () {
+              saveTranscription();
+            },
+            icon: Icon(Icons.save_alt),
+            label: Text("Save"),
             textColor: Colors.white,
           ),
         ],
@@ -333,10 +364,10 @@ class _MyConversationTemplateState extends State<ConversationTemplate> {
               iconSize: 24,
               elevation: 16,
               style: TextStyle(color: Colors.black, fontSize: 18),
-              underline: Container(
-                height: 2,
-                color: Colors.deepPurpleAccent,
-              ),
+              // underline: Container(
+              //   height: 2,
+              //   color: Colors.black
+              // ),
               onChanged: (String data) {
                 setState(() {
                   language = data;

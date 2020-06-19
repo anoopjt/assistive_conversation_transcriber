@@ -117,41 +117,6 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 _signInButtonG(),
                 Padding(padding: EdgeInsets.only(top: 20)),
-                Form(
-                    key: _formKey,
-                    child: Column(
-                      children: <Widget>[
-                        TextFormField(
-                            obscureText: false,
-                            controller: myController,
-                            style: TextStyle(fontSize: 20),
-                            decoration: InputDecoration(
-                              contentPadding:
-                                  EdgeInsets.fromLTRB(20.0, 15.0, 20.0, 15.0),
-                              hintText: "UserName",
-                              border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(32.0)),
-                            ),
-                            validator: (text) {
-                              if (text == null || text.isEmpty) {
-                                return 'Text is empty';
-                              }
-                              return null;
-                            }),
-                        IconButton(
-                          icon: Icon(Icons.arrow_forward),
-                          onPressed: () {
-                            if (_formKey.currentState.validate()) {
-                              simpleSignIn(myController.text);
-                              Navigator.of(context).pushAndRemoveUntil(
-                                  MaterialPageRoute(builder: (context) {
-                                return HomePage();
-                              }), ModalRoute.withName('/'));
-                            }
-                          },
-                        ),
-                      ],
-                    ))
               ],
             ),
           ),
@@ -223,13 +188,13 @@ class _LoginPageState extends State<LoginPage> {
       color: Colors.white,
       splashColor: Colors.grey,
       onPressed: () {
-        // signInWithGoogle().whenComplete(() {
-        //   Navigator.of(context).pushAndRemoveUntil(
-        //       MaterialPageRoute(builder: (context) {
-        //     return HomePage();
-        //   }), ModalRoute.withName('/'));
-        // });
-        showInSnackBar("Google button pressed");
+        signInWithGoogle().whenComplete(() {
+          Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (context) {
+            return HomePage();
+          }), ModalRoute.withName('/'));
+        });
+        //showInSnackBar("Google button pressed");
       },
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(40)),
       highlightElevation: 0,
