@@ -188,11 +188,14 @@ class _LoginPageState extends State<LoginPage> {
       color: Colors.white,
       splashColor: Colors.grey,
       onPressed: () {
-        signInWithGoogle().whenComplete(() {
-          Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(builder: (context) {
-            return HomePage();
-          }), ModalRoute.withName('/'));
+        signInWithGoogle().then((value) {
+          if (value == "cancelledByUser" || value == "error") {
+            showInSnackBar(value);
+          } else
+            Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (context) {
+              return HomePage();
+            }), ModalRoute.withName('/'));
         });
         //showInSnackBar("Google button pressed");
       },

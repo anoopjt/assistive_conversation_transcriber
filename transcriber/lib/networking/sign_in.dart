@@ -67,6 +67,10 @@ Future<String> signInWithGoogle() async {
 
   jwt = JSON.jsonDecode(response.body)["jwt_token"];
 
+  if(jwt == null){
+    return 'error';
+  }
+
   SharedPreferences prefs = await SharedPreferences.getInstance();
   prefs.setBool('logged', true);
   prefs.setString('method', 'google');
@@ -121,6 +125,10 @@ Future<String> loginWithFB() async {
           headers: {'Content-type': 'application/json'});
 
       jwt = JSON.jsonDecode(response.body)["jwt_token"];
+
+      if(jwt == null) {
+        return 'error';
+      }
 
       SharedPreferences prefs = await SharedPreferences.getInstance();
       prefs.setBool('logged', true);
